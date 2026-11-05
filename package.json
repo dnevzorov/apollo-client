@@ -1,6 +1,6 @@
 {
   "name": "@dnevzorov/apollo-client",
-  "version": "1.1.3",
+  "version": "2.0.0",
   "description": "Apollo Client drop-in replacement with automatic cache updates",
   "keywords": [
     "apollo",
