@@ -7,24 +7,28 @@ updates. It will update apollo cache based on a mutation or subscription result.
 ## Install
 
 ```
-npm i @jimmyn/apollo-client @apollo/client --save
+pnpm add @dnevzorov/apollo-client @apollo/client
 ```
 
-or
+Supports `@apollo/client` 3.7+ and 4. With Apollo Client 4, also install its `rxjs` peer.
 
-```
-yarn add @jimmyn/apollo-client @apollo/client
-```
+The package re-exports everything from `@apollo/client` and `@apollo/client/react`, so it covers
+the React API in both majors. Apollo Client 4 removed some APIs, for example `ApolloError`; see the
+[Apollo Client 4 migration guide](https://www.apollographql.com/docs/react/migrating/apollo-client-4-migration).
+
+In plain Node ESM (no bundler, no Vitest) the package needs Apollo Client 4. Apollo Client 3 has
+no `exports` map, so Node ESM cannot load its React entry point. CommonJS (`require`) works with
+both majors.
 
 ## Setup
 
 ```typescript jsx
 import React from 'react';
-import {render} from 'react-dom';
-import {ApolloClient, InMemoryCache} from '@jimmyn/apollo-client';
+import {createRoot} from 'react-dom/client';
+import {ApolloClient, ApolloProvider, HttpLink, InMemoryCache} from '@dnevzorov/apollo-client';
 
 const client = new ApolloClient({
-  uri: 'localhost:8080',
+  link: new HttpLink({uri: 'http://localhost:8080/graphql'}),
   cache: new InMemoryCache()
 });
 
@@ -36,7 +40,7 @@ const App = () => (
   </ApolloProvider>
 );
 
-render(<App />, document.getElementById('root'));
+createRoot(document.getElementById('root')!).render(<App />);
 ```
 
 ## Mutations
@@ -49,7 +53,7 @@ For example this code
 
 ```typescript jsx
 import React from 'react';
-import {useMutation, useQuery} from '@jimmyn/apollo-client';
+import {useMutation, useQuery} from '@dnevzorov/apollo-client';
 import {createTodoMutation, todosQuery} from './api/operations';
 import {TodosList} from './TodosList';
 
@@ -129,7 +133,7 @@ And this code
 
 ```typescript jsx
 import React from 'react';
-import {useMutation} from '@jimmyn/apollo-client';
+import {useMutation} from '@dnevzorov/apollo-client';
 import {Todo} from './api/generated';
 import {deleteTodoMutation, todosQuery, updateTodoMutation} from './api/operations';
 
@@ -267,7 +271,9 @@ const handleDeleteTodo = () => {
 
 ## Subscriptions
 
-`useSubscription` accepts the same offline options as `useMutation`
+`useSubscription` accepts the same offline options as `useMutation`. It updates the cache through
+the `onData` option. If you pass your own `onData` (or `onSubscriptionData` in Apollo Client 3), the
+automatic cache update is off.
 
 ```typescript jsx
 useSubscription(onTodoUpdate, {updateQuery: todosQuery});
@@ -280,7 +286,7 @@ useSubscription(onTodoUpdate, {updateQuery: todosQuery});
 Default configurations can be customized by calling `setOfflineConfig`
 
 ```typescript jsx
-import {setOfflineConfig} from '@jimmyn/apollo-client';
+import {setOfflineConfig} from '@dnevzorov/apollo-client';
 
 setOfflineConfig({
   getIdFieldFromObject(item: any) {
@@ -312,7 +318,7 @@ implementations
 Example
 
 ```typescript
-import {updateApolloCache} from '@jimmyn/apollo-client';
+import {updateApolloCache} from '@dnevzorov/apollo-client';
 
 const newTodo = {
   __typename: 'Todo',
@@ -339,8 +345,14 @@ type OfflineOptions<TData> = {
   mapResultToUpdate?(data: NonNullable<TData>): Item;
 };
 
+// ApolloClient or ApolloCache
+type CacheProxy = {
+  readQuery(options: {query: DocumentNode; variables?: any}): any;
+  writeQuery(options: {query: DocumentNode; variables?: any; data: any}): any;
+};
+
 type UpdateCacheOptions<TData = any> = OfflineOptions<TData> & {
-  client: ApolloClient<any> | DataProxy;
+  client: CacheProxy;
   data: TData;
 };
 
