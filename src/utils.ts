@@ -3,7 +3,7 @@ export const isObject = (object: any) => object != null && typeof object === 'ob
 export const pick = (obj: {[key: string]: any} | undefined, keys: string[]) => {
   const result: {[key: string]: any} = {};
   if (!obj) return result;
-  keys.forEach(key => {
+  keys.forEach((key) => {
     if (obj[key] === undefined) return;
     result[key] = obj[key];
   });
@@ -14,7 +14,7 @@ export const findArrayInObject = (obj: any, path: string[] = []): string[] | und
   if (Array.isArray(obj)) return path;
   if (!isObject(obj)) return undefined;
   let result: string[] | undefined;
-  Object.keys(obj).some(key => {
+  Object.keys(obj).some((key) => {
     const newPath = findArrayInObject(obj[key], path.concat(key));
     if (newPath) {
       result = newPath;

@@ -1,16 +1,9 @@
-import {
-  ApolloClient,
-  BaseSubscriptionOptions,
-  DataProxy,
-  DocumentNode,
-  MutationFunctionOptions,
-  OperationVariables
-} from '@apollo/client';
-import {resultKeyNameFromField} from 'apollo-utilities';
-import {FieldNode, OperationDefinitionNode} from 'graphql';
-import produce from 'immer';
-import {OperationTypes, prefixesForAdd, prefixesForRemove, prefixesForUpdate} from './const';
-import {findArrayInObject, getValueByPath, pick, setValueByPath} from './utils';
+import type {DocumentNode, OperationVariables} from '@apollo/client';
+import type {MutationFunctionOptions, SubscriptionHookOptions} from '@apollo/client/react';
+import type {FieldNode, OperationDefinitionNode} from 'graphql';
+import {produce} from 'immer';
+import {OperationTypes, prefixesForAdd, prefixesForRemove, prefixesForUpdate} from './const.js';
+import {findArrayInObject, getValueByPath, pick, setValueByPath} from './utils.js';
 
 type Item = {[key: string]: any};
 
@@ -43,7 +36,7 @@ export const getOpTypeFromOperationName = (opName = ''): OperationTypes => {
     [offlineConfig.prefixesForAdd, OperationTypes.ADD],
     [offlineConfig.prefixesForRemove, OperationTypes.REMOVE],
     [offlineConfig.prefixesForUpdate, OperationTypes.UPDATE]
-  ].forEach(row => {
+  ].forEach((row) => {
     const [prefix, type] = row as [string[], OperationTypes];
     if (prefix.some(comparator)) {
       result = type;
@@ -58,7 +51,7 @@ export const updateExistingKeys = <T extends Item>(oldItem: T, newItem: T | unde
   ...oldItem,
   ...pick(
     newItem,
-    Object.keys(oldItem).filter(key => key !== '__typename')
+    Object.keys(oldItem).filter((key) => key !== '__typename')
   )
 });
 
@@ -71,7 +64,7 @@ export const getUpdater = <T extends Item>(
       return (currentValue, newItem) => {
         if (Array.isArray(currentValue)) {
           return newItem
-            ? [...currentValue.filter(item => item[idField] !== newItem[idField]), newItem]
+            ? [...currentValue.filter((item) => item[idField] !== newItem[idField]), newItem]
             : [...currentValue];
         } else {
           return newItem;
@@ -81,7 +74,7 @@ export const getUpdater = <T extends Item>(
       return (currentValue, newItem) => {
         if (Array.isArray(currentValue)) {
           return newItem
-            ? currentValue.map(item =>
+            ? currentValue.map((item) =>
                 item[idField] === newItem[idField] ? updateExistingKeys<T>(item, newItem) : item
               )
             : [...currentValue];
@@ -93,21 +86,21 @@ export const getUpdater = <T extends Item>(
       return (currentValue, newItem) => {
         if (Array.isArray(currentValue)) {
           return newItem
-            ? currentValue.filter(item => item[idField] !== newItem[idField])
+            ? currentValue.filter((item) => item[idField] !== newItem[idField])
             : [...currentValue];
         } else {
           return null;
         }
       };
     default:
-      return currentValue => currentValue;
+      return (currentValue) => currentValue;
   }
 };
 
 export const getOperationFieldName = (operation: DocumentNode): string => {
-  return resultKeyNameFromField(
-    (operation.definitions[0] as OperationDefinitionNode).selectionSet.selections[0] as FieldNode
-  );
+  const field = (operation.definitions[0] as OperationDefinitionNode).selectionSet
+    .selections[0] as FieldNode;
+  return field.alias ? field.alias.value : field.name.value;
 };
 
 export type QueryWithVariables<TVariables = OperationVariables> = {
@@ -123,11 +116,21 @@ export type OfflineOptions<TData> = {
   mapResultToUpdate?(data: NonNullable<TData>): Item;
 };
 
-export type MutationOptions<TData, TVariables> = MutationFunctionOptions<TData, TVariables> &
+export type MutationOptions<TData, TVariables extends OperationVariables> = MutationFunctionOptions<
+  TData,
+  TVariables
+> &
   OfflineOptions<TData>;
 
+// The subset of ApolloClient and ApolloCache that updateCache needs, so it accepts either in both
+// Apollo Client 3 and 4.
+type CacheProxy = {
+  readQuery(options: {query: DocumentNode; variables?: any}): any;
+  writeQuery(options: {query: DocumentNode; variables?: any; data: any}): any;
+};
+
 type UpdateCacheOptions<TData = any> = OfflineOptions<TData> & {
-  client: ApolloClient<any> | DataProxy;
+  client: CacheProxy;
   data: TData;
 };
 
@@ -141,7 +144,7 @@ export const updateCache = <TData = any>({
   mapResultToUpdate
 }: UpdateCacheOptions<TData>) => {
   if (!data) return;
-  const [opFieldName]: string[] = Object.keys(data);
+  const opFieldName = Object.keys(data)[0] as string;
   const opType =
     operationType === OperationTypes.AUTO ? getOpTypeFromOperationName(opFieldName) : operationType;
   if (!(data as any)[opFieldName]) return;
@@ -151,7 +154,6 @@ export const updateCache = <TData = any>({
   const queryField = getOperationFieldName(query);
   let cachedQueryResult;
   try {
-    // @ts-ignore
     cachedQueryResult = client.readQuery({
       query,
       variables: queryVars
@@ -175,11 +177,13 @@ export const updateCache = <TData = any>({
     }
   });
 
-  // @ts-ignore
   client.writeQuery({query, variables: queryVars, data: updatedQueryData});
 };
 
-export const getMutationOptions = <TData = any, TVariables = OperationVariables>({
+export const getMutationOptions = <
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables
+>({
   updateQuery,
   updatePath,
   idField,
@@ -190,7 +194,8 @@ export const getMutationOptions = <TData = any, TVariables = OperationVariables>
   if (!updateQuery || options.update) return options;
   return {
     update: (client, {data}) => {
-      updateCache({
+      // Apollo Client 3.12+ types `data` as Unmasked<TData>, which is not assignable to TData.
+      updateCache<any>({
         client,
         data,
         idField,
@@ -204,20 +209,29 @@ export const getMutationOptions = <TData = any, TVariables = OperationVariables>
   };
 };
 
-export type SubscriptionOptions<TData, TVariables> = BaseSubscriptionOptions<TData, TVariables> &
-  OfflineOptions<TData>;
+export type SubscriptionOptions<
+  TData,
+  TVariables extends OperationVariables
+> = SubscriptionHookOptions<TData, TVariables> & OfflineOptions<TData>;
 
-export const getSubscriptionOptions = <TData = any, TVariables = OperationVariables>({
+export const getSubscriptionOptions = <
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables
+>({
   updateQuery,
   updatePath,
   idField,
   operationType,
   mapResultToUpdate,
   ...options
-}: SubscriptionOptions<TData, TVariables>): BaseSubscriptionOptions<TData, TVariables> => {
-  if (!updateQuery || options.onSubscriptionData) return options;
+}: SubscriptionOptions<TData, TVariables>): SubscriptionHookOptions<TData, TVariables> => {
+  // Apollo Client 3 calls only onData when both callbacks are set, so a user's
+  // onSubscriptionData (removed in Apollo Client 4) must also disable the cache update.
+  if (!updateQuery || options.onData || 'onSubscriptionData' in options) {
+    return options as SubscriptionHookOptions<TData, TVariables>;
+  }
   return {
-    onSubscriptionData: ({client, subscriptionData: {data}}) => {
+    onData: ({client, data: {data}}) => {
       updateCache({
         client,
         data,
@@ -229,5 +243,5 @@ export const getSubscriptionOptions = <TData = any, TVariables = OperationVariab
       });
     },
     ...options
-  };
+  } as SubscriptionHookOptions<TData, TVariables>;
 };
