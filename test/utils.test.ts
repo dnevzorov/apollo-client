@@ -1,4 +1,4 @@
-import {pick, findArrayInObject, getValueByPath, setValueByPath, isObject} from 'utils';
+import {findArrayInObject, getValueByPath, isObject, pick, setValueByPath} from '../src/utils.js';
 
 const data = {
   posts: [

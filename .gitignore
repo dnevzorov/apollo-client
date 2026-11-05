@@ -2,5 +2,12 @@
 .DS_Store
 node_modules
 dist
+coverage/
 /.idea/
 /.env
+tsconfig.tsbuildinfo
+
+# Yarn (legacy)
+yarn.lock
+.yarn/
+.pnp.*

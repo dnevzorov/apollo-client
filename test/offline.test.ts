@@ -1,21 +1,20 @@
-import {ApolloClient, InMemoryCache} from '@apollo/client';
-import {OperationTypes} from '../src/const';
-import 'cross-fetch/polyfill';
+import {ApolloClient, ApolloLink, InMemoryCache} from '@apollo/client';
+import {OperationTypes} from '../src/const.js';
 import {
   getOperationFieldName,
   getOpTypeFromOperationName,
   getUpdater,
-  updateCache,
+  offlineConfig,
   setConfig,
-  offlineConfig
-} from '../src/offline';
+  updateCache
+} from '../src/offline.js';
 import {
   createPostMutation,
   deletePostMutation,
   featuredPostsQuery,
   postsQuery,
   updatePostMutation
-} from './operations';
+} from './operations.js';
 
 const defaultConfig = {...offlineConfig};
 
@@ -90,12 +89,12 @@ describe('getUpdater', () => {
   });
 });
 
+const createClient = () => new ApolloClient({cache: new InMemoryCache(), link: ApolloLink.empty()});
+
 describe('updateCache', () => {
-  let client: ApolloClient<any>;
+  let client: ReturnType<typeof createClient>;
   beforeEach(() => {
-    client = new ApolloClient({
-      cache: new InMemoryCache()
-    });
+    client = createClient();
     client.writeQuery({
       query: postsQuery,
       data: {posts: [...posts]}
@@ -113,7 +112,7 @@ describe('updateCache', () => {
   });
 
   test('should not update empty query', () => {
-    jest.spyOn(client, 'writeQuery');
+    vi.spyOn(client, 'writeQuery');
     updateCache({
       client,
       data: {createPost: newPost},
@@ -195,7 +194,7 @@ describe('updateCache', () => {
     });
 
     test('should update item with getIdFieldFromObject in config', () => {
-      const getIdFieldFromObject = jest.fn(() => 'user_id');
+      const getIdFieldFromObject = vi.fn(() => 'user_id');
       setConfig({getIdFieldFromObject});
       const updatedPost = {user_id: post3.user_id, title: 'Updated post', __typename: 'post'};
       updateCache({

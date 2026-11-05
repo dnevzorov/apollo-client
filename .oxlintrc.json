@@ -1,0 +1,83 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "vitest"],
+  "ignorePatterns": [
+    "dist/*",
+    "coverage/*",
+    "**/*.config.ts",
+    "**/*.config.mjs",
+    "scripts/consumer/**"
+  ],
+  "rules": {
+    "no-debugger": "error",
+    "sort-imports": [
+      "error",
+      {
+        "ignoreCase": true,
+        "ignoreDeclarationSort": true
+      }
+    ],
+    "typescript/no-explicit-any": "warn",
+    "typescript/require-await": "warn",
+    "typescript/unbound-method": "warn",
+    "typescript/no-misused-promises": "warn",
+    "typescript/no-floating-promises": "warn",
+    "typescript/restrict-template-expressions": "warn",
+    "typescript/ban-ts-comment": "warn",
+    "typescript/consistent-type-imports": "error",
+    "typescript/return-await": "error",
+    "typescript/no-deprecated": "warn",
+    "typescript/no-unsafe-argument": "off",
+    "typescript/no-unsafe-member-access": "off",
+    "typescript/no-unsafe-call": "off",
+    "typescript/no-unsafe-assignment": "off",
+    "typescript/no-unsafe-return": "off",
+    "typescript/no-unused-vars": [
+      "error",
+      {
+        "args": "all",
+        "argsIgnorePattern": "^_",
+        "caughtErrors": "all",
+        "caughtErrorsIgnorePattern": "^_",
+        "destructuredArrayIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "ignoreRestSiblings": true
+      }
+    ],
+    "unicorn/prefer-node-protocol": "error"
+  },
+  "overrides": [
+    {
+      "files": ["src/**/*.ts"],
+      "rules": {
+        "no-console": "error"
+      }
+    },
+    {
+      "files": ["test/**/*.{ts,tsx}"],
+      "rules": {
+        "typescript/unbound-method": "off",
+        "vitest/expect-expect": "error",
+        "vitest/no-identical-title": "error",
+        "vitest/no-commented-out-tests": "error",
+        "vitest/valid-title": "error",
+        "vitest/valid-expect": [
+          "error",
+          {
+            "maxArgs": 2
+          }
+        ],
+        "vitest/valid-describe-callback": "error",
+        "vitest/no-import-node-test": "error",
+        "vitest/consistent-test-it": [
+          "error",
+          {
+            "fn": "test"
+          }
+        ],
+        "vitest/no-standalone-expect": "error",
+        "vitest/prefer-spy-on": "warn"
+      }
+    }
+  ]
+}

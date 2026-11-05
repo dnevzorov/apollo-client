@@ -1,30 +1,30 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`updateCache should add item 1`] = `
-Object {
-  "posts": Array [
-    Object {
+exports[`updateCache > should add item 1`] = `
+{
+  "posts": [
+    {
       "__typename": "post",
       "date": "2018-01-01",
       "id": 1,
       "title": "A day on the beach",
       "user_id": 1,
     },
-    Object {
+    {
       "__typename": "post",
       "date": "2018-12-24",
       "id": 24,
       "title": "Coding for joy",
       "user_id": 10,
     },
-    Object {
+    {
       "__typename": "post",
       "date": "2018-12-25",
       "id": 25,
       "title": "On the road",
       "user_id": 9,
     },
-    Object {
+    {
       "__typename": "post",
       "date": "2018-12-31",
       "id": 26,
@@ -35,17 +35,17 @@ Object {
 }
 `;
 
-exports[`updateCache should remove item 1`] = `
-Object {
-  "posts": Array [
-    Object {
+exports[`updateCache > should remove item 1`] = `
+{
+  "posts": [
+    {
       "__typename": "post",
       "date": "2018-01-01",
       "id": 1,
       "title": "A day on the beach",
       "user_id": 1,
     },
-    Object {
+    {
       "__typename": "post",
       "date": "2018-12-24",
       "id": 24,
@@ -56,24 +56,24 @@ Object {
 }
 `;
 
-exports[`updateCache should update item 1`] = `
-Object {
-  "posts": Array [
-    Object {
+exports[`updateCache > should update item 1`] = `
+{
+  "posts": [
+    {
       "__typename": "post",
       "date": "2018-01-01",
       "id": 1,
       "title": "A day on the beach",
       "user_id": 1,
     },
-    Object {
+    {
       "__typename": "post",
       "date": "2018-12-24",
       "id": 24,
       "title": "Coding for joy",
       "user_id": 10,
     },
-    Object {
+    {
       "__typename": "post",
       "date": "2018-12-25",
       "id": 25,
@@ -84,24 +84,24 @@ Object {
 }
 `;
 
-exports[`updateCache should update item with custom id field 1`] = `
-Object {
-  "posts": Array [
-    Object {
+exports[`updateCache > should update item with custom id field 1`] = `
+{
+  "posts": [
+    {
       "__typename": "post",
       "date": "2018-01-01",
       "id": 1,
       "title": "A day on the beach",
       "user_id": 1,
     },
-    Object {
+    {
       "__typename": "post",
       "date": "2018-12-24",
       "id": 24,
       "title": "Coding for joy",
       "user_id": 10,
     },
-    Object {
+    {
       "__typename": "post",
       "date": "2018-12-25",
       "id": 25,
@@ -112,24 +112,24 @@ Object {
 }
 `;
 
-exports[`updateCache should update item with mapResultToUpdate 1`] = `
-Object {
-  "posts": Array [
-    Object {
+exports[`updateCache > should update item with mapResultToUpdate 1`] = `
+{
+  "posts": [
+    {
       "__typename": "post",
       "date": "2018-01-01",
       "id": 1,
       "title": "A day on the beach",
       "user_id": 1,
     },
-    Object {
+    {
       "__typename": "post",
       "date": "2018-12-24",
       "id": 24,
       "title": "Coding for joy",
       "user_id": 10,
     },
-    Object {
+    {
       "__typename": "post",
       "date": "2018-12-25",
       "id": 25,
@@ -140,24 +140,24 @@ Object {
 }
 `;
 
-exports[`updateCache with custom config should update item with getIdFieldFromObject in config 1`] = `
-Object {
-  "posts": Array [
-    Object {
+exports[`updateCache > with custom config > should update item with getIdFieldFromObject in config 1`] = `
+{
+  "posts": [
+    {
       "__typename": "post",
       "date": "2018-01-01",
       "id": 1,
       "title": "A day on the beach",
       "user_id": 1,
     },
-    Object {
+    {
       "__typename": "post",
       "date": "2018-12-24",
       "id": 24,
       "title": "Coding for joy",
       "user_id": 10,
     },
-    Object {
+    {
       "__typename": "post",
       "date": "2018-12-25",
       "id": 25,
@@ -168,24 +168,24 @@ Object {
 }
 `;
 
-exports[`updateCache with custom config should update item with idField in config 1`] = `
-Object {
-  "posts": Array [
-    Object {
+exports[`updateCache > with custom config > should update item with idField in config 1`] = `
+{
+  "posts": [
+    {
       "__typename": "post",
       "date": "2018-01-01",
       "id": 1,
       "title": "A day on the beach",
       "user_id": 1,
     },
-    Object {
+    {
       "__typename": "post",
       "date": "2018-12-24",
       "id": 24,
       "title": "Coding for joy",
       "user_id": 10,
     },
-    Object {
+    {
       "__typename": "post",
       "date": "2018-12-25",
       "id": 25,
