@@ -1,0 +1,149 @@
+name: CI
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+
+      - name: Install Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check formatting
+        run: pnpm format:check
+
+      - name: Type check
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint --quiet
+
+      - name: Unit tests
+        run: pnpm test:ci
+
+      - name: Check build exports
+        run: pnpm build && node scripts/check-dist-exports.mjs
+
+      - name: Upload base coverage
+        if: github.ref == 'refs/heads/master'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage-base
+          path: coverage/coverage-summary.json
+          overwrite: true
+
+      - name: Download base coverage
+        if: github.event_name == 'pull_request'
+        uses: dawidd6/action-download-artifact@a92c7ae74cf1df8810783758581e485ac3aaa309 # v28
+        with:
+          name: coverage-base
+          path: coverage-base
+          branch: master
+          workflow: main.yml
+          if_no_artifact_found: warn
+
+      - name: Check base coverage exists
+        if: github.event_name == 'pull_request'
+        id: base-coverage
+        run: test -f coverage-base/coverage-summary.json && echo "exists=true" >> "$GITHUB_OUTPUT" || echo "exists=false" >> "$GITHUB_OUTPUT"
+
+      - name: Report coverage
+        uses: davelosert/vitest-coverage-report-action@74c2d9210b4fc44c84d8213f61d7ec99837b7aa0 # v2.13.2
+        with:
+          file-coverage-mode: none
+          vite-config-path: vitest.config.ts
+          json-summary-compare-path: ${{ steps.base-coverage.outputs.exists == 'true' && 'coverage-base/coverage-summary.json' || '' }}
+
+  apollo3:
+    name: Apollo Client ${{ matrix.apollo }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.7.0 is the lowest supported version (first with `onData`); MONEI/dashboards uses 3.14.
+        apollo: ['3.7.0', '3.14.1']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+
+      - name: Install Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile && pnpm add -D @apollo/client@${{ matrix.apollo }}
+
+      - name: Type check
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Check build exports
+        run: pnpm build && node scripts/check-dist-exports.mjs
+
+  consumer:
+    name: Consumer with Apollo Client ${{ matrix.apollo }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # MONEI/dashboards
+          - apollo: '3.14.1'
+            graphql: '15.10.1'
+          - apollo: '^4'
+            graphql: '^16'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+
+      - name: Install Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check consumer
+        run: scripts/check-consumer.sh '${{ matrix.apollo }}' '${{ matrix.graphql }}'
